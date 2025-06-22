@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Set document character encoding and page title -->
+    <meta charset="UTF-8" />
+    <title>Tableau Embedding Buttons</title>
+
+    <!-- Import Tableau Embedding API v3 as a modern JavaScript module -->
+    <script
+      type="module"
+      src="https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"
+    ></script>
+
+    <!-- Inline CSS for layout and button styling -->
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f9f9f9;
+        padding: 40px 0;
+        margin: 0;
+        text-align: center;
+      }
+
+      .center {
+        display: inline-block;
+      }
+
+      /* Flex container for grouping buttons */
+      .button-group {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      /* Base button styling */
+      .button-group button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        color: white;
+      }
+
+      /* Button color groups with hover effects */
+      .fullscreen-btn {
+        background-color: #27ae60;
+      }
+      .fullscreen-btn:hover {
+        background-color: #2ecc71;
+      }
+
+      .reset-btn {
+        background-color: #c0392b;
+      }
+      .reset-btn:hover {
+        background-color: #e74c3c;
+      }
+
+      .export-btn {
+        background-color: #2c3e50;
+      }
+      .export-btn:hover {
+        background-color: #34495e;
+      }
+
+      .image-btn {
+        background-color: #74aaeb;
+      }
+      .image-btn:hover {
+        background-color: #8dbcf1;
+      }
+
+      /* Set size for the Tableau viz container */
+      #vizContainer {
+        width: 100%;
+        max-width: 1200px;
+        height: 800px;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Button controls for Tableau interaction -->
+    <div class="button-group" aria-label="Tableau control buttons">
+      <button class="fullscreen-btn" id="fullscreen">ViewFullscreen</button>
+      <button class="reset-btn" id="undo">Undo</button>
+      <button class="reset-btn" id="redo">Redo</button>
+      <button class="reset-btn" id="revert">RevertAll</button>
+      <button class="export-btn" id="export-crosstab">ExportCrossTab</button>
+      <button class="export-btn" id="export-data">ExportData</button>
+      <button class="export-btn" id="export-pdf">ExportPDF</button>
+      <button class="export-btn" id="export-ppt">ExportPowerPoint</button>
+      <button class="export-btn" id="export-workbook">ExportWorkbook</button>
+      <button class="export-btn" id="share">Share</button>
+      <button class="image-btn" id="export-image">ExportImage</button>
+    </div>
+
+    <!-- Tableau dashboard will be embedded here -->
+    <main class="center">
+      <div id="vizContainer"></div>
+    </main>
+
+    <!-- JavaScript logic to load and control Tableau viz -->
+    <script type="module">
+      // Import necessary Tableau components
+      import {
+        TableauViz,
+        TableauDialogType,
+        TableauEventType,
+      } from 'https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
+
+      // Create TableauViz instance and configure it
+      const vizContainer = document.getElementById('vizContainer');
+      const viz = new TableauViz();
+
+      // Set the source of the dashboard
+      viz.src =
+        'https://public.tableau.com/views/TaipeiMRT_17505727637320/TaipeiMRT?:language=zh-TW&publish=yes&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link';
+
+      // Place the Tableau toolbar at the top
+      viz.toolbar = 'top';
+
+      // Append viz to the DOM
+      vizContainer.appendChild(viz);
+
+      // Function to toggle fullscreen mode
+      function toggleFullscreen(elem) {
+        elem = elem || document.documentElement;
+        if (
+          !document.fullscreenElement &&
+          !document.mozFullScreenElement &&
+          !document.webkitFullscreenElement &&
+          !document.msFullscreenElement
+        ) {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+          } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+          } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+          } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          }
+        }
+      }
+
+      // When the viz is fully loaded and interactive
+      viz.addEventListener(TableauEventType.FirstInteractive, () => {
+        // General-purpose dialog handler
+        const showDialog = async (type) => {
+          try {
+            await viz.displayDialogAsync(type);
+          } catch (err) {
+            console.error(`${type} error:`, err);
+          }
+        };
+
+        // Bind dialog buttons to export and share options
+        document
+          .getElementById('export-crosstab')
+          .addEventListener('click', () =>
+            showDialog(TableauDialogType.ExportCrossTab)
+          );
+        document
+          .getElementById('export-data')
+          .addEventListener('click', () =>
+            showDialog(TableauDialogType.ExportData)
+          );
+        document
+          .getElementById('export-pdf')
+          .addEventListener('click', () =>
+            showDialog(TableauDialogType.ExportPDF)
+          );
+        document
+          .getElementById('export-ppt')
+          .addEventListener('click', () =>
+            showDialog(TableauDialogType.ExportPowerPoint)
+          );
+        document
+          .getElementById('export-workbook')
+          .addEventListener('click', () =>
+            showDialog(TableauDialogType.ExportWorkbook)
+          );
+        document
+          .getElementById('share')
+          .addEventListener('click', () => showDialog(TableauDialogType.Share));
+
+        // Bind undo, redo, and revert functionality
+        document.getElementById('undo').addEventListener('click', async () => {
+          try {
+            await viz.undoAsync();
+          } catch (err) {
+            console.error('Undo error:', err);
+          }
+        });
+
+        document.getElementById('redo').addEventListener('click', async () => {
+          try {
+            await viz.redoAsync();
+          } catch (err) {
+            console.error('Redo error:', err);
+          }
+        });
+
+        document
+          .getElementById('revert')
+          .addEventListener('click', async () => {
+            try {
+              await viz.revertAllAsync();
+            } catch (err) {
+              console.error('RevertAll error:', err);
+            }
+          });
+
+        // Bind fullscreen toggle to button
+        document.getElementById('fullscreen').addEventListener('click', () => {
+          toggleFullscreen(document.getElementById('vizContainer'));
+        });
+
+        // Bind image export logic with download functionality
+        document
+          .getElementById('export-image')
+          .addEventListener('click', async () => {
+            try {
+              const imageData = await viz.exportImageAsync();
+              const link = document.createElement('a');
+              link.style.display = 'none';
+              link.href = imageData;
+              link.download = 'tableau_viz.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            } catch (err) {
+              console.error('ExportImage error:', err);
+            }
+          });
+      });
+    </script>
+  </body>
+</html>
